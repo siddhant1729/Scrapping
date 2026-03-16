@@ -1,127 +1,178 @@
-# 🕷️ Scraper Engine: Multi-Source Data Harvester
+# 🕷️ Scraper Engine — Multi-Source Data Harvester
 
-![Scraper Hero Banner](./assets/hero_banner.png)
+> A modular Python engine that extracts, cleans, and normalises content from **Blogs**, **YouTube**, and **PubMed** into a strictly typed JSON schema — ready for LLM fine-tuning, RAG pipelines, or research analysis.
 
-A robust, multi-ecosystem scraping engine designed to extract, clean, and normalize content from disparate sources into a strictly typed JSON schema. Targeted towards **Blogs**, **YouTube**, and **PubMed**.
+![Python](https://img.shields.io/badge/Python-3.9+-blue?style=flat-square&logo=python&logoColor=white)
+![Pydantic](https://img.shields.io/badge/Pydantic-validated-e85d24?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
 
-## 🚀 Overview
+---
 
-The Scraper Engine is a modular Python system that utilizes specialized parsers for different content types. It handles boilerplate removal, automatic topic tagging, language detection, and content chunking to provide high-fidelity data for downstream processing (e.g., LLM fine-tuning, RAG pipelines, or research analysis).
+## 📖 Overview
 
-## ✨ Key Features
+The Scraper Engine is a resilient, multi-ecosystem data pipeline with specialised parsers for each content type. It handles boilerplate removal, automatic topic tagging, language detection, and content chunking to produce high-fidelity structured data from disparate web sources.
 
-- **Multi-Source Support**:
-  - 📝 **Blogs**: High-fidelity text extraction using Newspaper3k with Readability-lxml fallback.
-  - 🎥 **YouTube**: Metadata and transcript extraction via `yt-dlp` and `youtube-transcript-api`.
-  - 🔬 **PubMed**: Scientific literature metadata and abstract extraction via Biopython (Entrez).
-- **Intelligent Processing**:
-  - **Deduplication**: Prevents duplicate entries based on Source URL.
-  - **Topic Tagging**: Automatic extraction of key phrases using RAKE-NLTK.
-  - **Content Chunking**: Segmenting long-form text into logical segments.
-  - **Schema Validation**: 100% adherence to strict Pydantic schemas.
-- **Resilience**:
-  - **Anti-Scraping**: Header rotation with randomized User-Agents.
-  - **Rate Limiting**: Configurable sleep intervals to respect source policies.
-  - **Graceful Failures**: Error isolation per source ensures the pipeline continues even if one target fails.
+**Built for:** LLM fine-tuning datasets · RAG pipelines · Research aggregation · Content analysis
+
+---
+
+## ✨ Features
+
+### Multi-Source Support
+| Source | Library | Notes |
+|--------|---------|-------|
+| 📝 **Blogs** | Newspaper3k + Readability-lxml | Fallback for edge cases |
+| 🎥 **YouTube** | yt-dlp + youtube-transcript-api | Metadata & transcript extraction |
+| 🔬 **PubMed** | Biopython (Entrez) | Scientific metadata & abstracts |
+
+### Intelligent Processing
+- **Deduplication** — prevents duplicate entries based on source URL
+- **Topic tagging** — automatic key phrase extraction via RAKE-NLTK
+- **Content chunking** — segments long-form text into logical blocks
+- **Schema validation** — 100% adherence to strict Pydantic models
+- **Language detection** — ISO 639-1 codes with fallback for non-English text
+
+### Resilience
+- **Header rotation** — randomised user-agents to avoid blocks
+- **Rate limiting** — configurable sleep intervals per source
+- **Graceful failures** — per-source error isolation keeps the pipeline running
+
+---
 
 ## 🏗️ Architecture
 
-```mermaid
-graph TD
-    A[main.py: Entry Point] --> B[pipeline.py: Dispatcher]
-    B --> C1[parsers/blog_parser.py]
-    B --> C2[parsers/youtube_parser.py]
-    B --> C3[parsers/pubmed_parser.py]
-    
-    C1 --> D[utils.py: Common Tools]
-    C2 --> D
-    C3 --> D
-    
-    D --> E[schema.py: Data Model]
-    E --> F[storage.py: JSON Storage]
-    
-    subgraph "Processing Logic"
-    D -.-> D1[Language Detection]
-    D -.-> D2[Topic Tagging]
-    D -.-> D3[Text Chunking]
-    D -.-> D4[Trust Scoring]
-    end
 ```
+main.py  (Entry Point)
+    └── pipeline.py  (Dispatcher)
+            ├── parsers/blog_parser.py
+            ├── parsers/youtube_parser.py
+            └── parsers/pubmed_parser.py
+                        │
+                        ▼
+                    utils.py  (Common Tools)
+                    ├── Language Detection
+                    ├── Topic Tagging
+                    ├── Text Chunking
+                    └── Trust Scoring
+                        │
+                        ▼
+                    schema.py  (Pydantic Models)
+                        │
+                        ▼
+                    storage.py  (JSON Output)
+```
+
+---
 
 ## 🛠️ Installation
 
-1. **Clone the repository**:
-   ```cmd
-   cd "C:\Users\shaur\OneDrive\Desktop\Scrapper"
-   ```
+**1. Navigate to the project directory**
+```cmd
+cd "C:\Users\shaur\OneDrive\Desktop\Scrapper"
+```
 
-2. **Install Dependencies**:
-   ```cmd
-   pip install -r requirements.txt
-   ```
+**2. Install dependencies**
+```cmd
+pip install -r requirements.txt
+```
+
+---
 
 ## ⚡ Usage
 
-Run the scraper using the main entry point:
-
+**Run via Python:**
 ```cmd
 python main.py
 ```
 
-Or use the provided one-click batch script on Windows:
+**Or use the one-click Windows batch script:**
 ```cmd
 run.bat
 ```
 
+---
+
 ## 📊 Data Schema
 
-All extracted data follows this canonical structure:
+All extracted records conform to this canonical structure:
 
 | Field | Type | Description |
-|---|---|---|
-| `source_url` | `string` | The canonical URL or reference ID. |
-| `source_type` | `enum` | one of `blog`, `youtube`, `pubmed`. |
-| `author` | `string` | Author name or Channel title. |
-| `published_date`| `string` | ISO-8601 formatted date. |
-| `language` | `string` | ISO 639-1 language code. |
-| `topic_tags` | `array` | Extracted topic keywords. |
-| `trust_score` | `float` | Heuristic score (0.0 - 1.0). |
-| `content_chunks`| `array` | Segmented text content. |
-
-## 📁 Storage Strategy
-
-Data is automatically partitioned into the `scraped_data/` directory:
-- `scraped_data/blogs.json`
-- `scraped_data/youtube.json`
-- `scraped_data/pubmed.json`
-- `scraped_data/scraped_data.json` ← unified export (all 6 records)
-
-## 🔐 Trust Score Design
-
-Scores are computed by `scoring/trust_score.py` using 5 weighted factors that match the assignment formula:
-
-```
-Trust Score = f(author_credibility, citation_count, domain_authority, recency, medical_disclaimer_presence)
-```
-
-| Factor | Weight | Method |
-|---|---|---|
-| Domain Authority | 0.30 | Tiered whitelist (`scoring/trusted_orgs.json`) |
-| Recency | 0.25 | Exponential decay `e^(-0.3·t)` |
-| Author Credibility | 0.20 | Trusted org lookup + multi-author averaging |
-| Citation Count | 0.15 | Content depth proxy + 50% spam penalty |
-| Medical Safety | 0.10 | Disclaimer keyword detection |
-
-## ⚠️ Limitations
-
-- **Blog paywalls**: Newspaper3k cannot extract content behind paywalls (e.g. WSJ, FT). Readability falls back to minimal text.
-- **YouTube transcripts**: Auto-generated captions may contain errors; some videos have no captions at all — `content_chunks` will be empty for those.
-- **PubMed rate limits**: Without an API key, requests are capped at 3/sec by NCBI. Bulk scraping of many PMIDs will be slow.
-- **Citation count**: A real citation count (e.g. from Semantic Scholar or CrossRef) is not implemented — chunk depth is used as a proxy.
-- **Region detection**: Blog and YouTube `region` is always `null`. Geo-detection would require IP or metadata analysis beyond the current scope.
-- **Language support**: RAKE-NLTK performs poorly on non-English text; the simple frequency fallback is used for those cases.
-- **NumPy/SciPy compatibility**: RAKE-NLTK may crash silently if your environment has a NumPy 2.x/SciPy version conflict — the simple fallback activates automatically.
+|-------|------|-------------|
+| `source_url` | `string` | Canonical URL or reference ID |
+| `source_type` | `enum` | One of `blog`, `youtube`, `pubmed` |
+| `author` | `string` | Author name or channel title |
+| `published_date` | `string` | ISO-8601 formatted date |
+| `language` | `string` | ISO 639-1 language code |
+| `topic_tags` | `array` | Extracted topic keywords |
+| `trust_score` | `float` | Heuristic credibility score (0.0 – 1.0) |
+| `content_chunks` | `array` | Segmented text content blocks |
 
 ---
 
-Built with ❤️ by Antigravity for Siddhant.
+## 📁 Storage Layout
+
+Scraped data is automatically partitioned into the `scraped_data/` directory:
+
+```
+scraped_data/
+├── blogs.json
+├── youtube.json
+├── pubmed.json
+└── scraped_data.json     ← unified export (all records)
+```
+
+---
+
+## 🔐 Trust Score
+
+Scores are computed by `scoring/trust_score.py` using five weighted factors:
+
+```
+Trust Score = f( author_credibility, citation_count, domain_authority, recency, medical_disclaimer )
+```
+
+| Factor | Weight | Method |
+|--------|--------|--------|
+| Domain Authority | **0.30** | Tiered whitelist (`scoring/trusted_orgs.json`) |
+| Recency | **0.25** | Exponential decay `e^(−0.3·t)` |
+| Author Credibility | **0.20** | Trusted org lookup + multi-author averaging |
+| Citation Count | **0.15** | Content depth proxy + 50% spam penalty |
+| Medical Safety | **0.10** | Disclaimer keyword detection |
+
+---
+
+## ⚠️ Known Limitations
+
+- **Blog paywalls** — Newspaper3k cannot extract content behind paywalls (e.g. WSJ, FT). Readability falls back to minimal text.
+- **YouTube transcripts** — auto-generated captions may contain errors; videos with no captions produce empty `content_chunks`.
+- **PubMed rate limits** — without an API key, NCBI caps requests at 3/sec. Bulk PMID scraping will be slow.
+- **Citation count** — real citation data (Semantic Scholar, CrossRef) is not implemented; chunk depth is used as a proxy.
+- **Region detection** — blog and YouTube `region` is always `null`; geo-detection is out of scope.
+- **Non-English text** — RAKE-NLTK performs poorly on non-English content; a simple frequency fallback is used automatically.
+- **NumPy/SciPy compatibility** — RAKE-NLTK may crash silently with a NumPy 2.x / SciPy version conflict; the frequency fallback activates automatically.
+
+---
+
+## 🧰 Tech Stack
+
+| Library | Purpose |
+|---------|---------|
+| `newspaper3k` | Blog content extraction |
+| `readability-lxml` | Fallback HTML parser |
+| `yt-dlp` | YouTube metadata |
+| `youtube-transcript-api` | YouTube transcript extraction |
+| `biopython` | PubMed / NCBI Entrez API |
+| `pydantic` | Schema validation |
+| `rake-nltk` | Topic keyword extraction |
+| `langdetect` | Language identification |
+
+---
+
+## 📄 License
+
+MIT — free to use, modify, and distribute.
+
+---
+
+*Built with ❤️ by **Antigravity** for Siddhant.*
