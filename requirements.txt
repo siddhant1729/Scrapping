@@ -1,0 +1,12 @@
+newspaper3k==0.2.8
+readability-lxml==0.8.1
+youtube-transcript-api==0.6.2
+yt-dlp>=2024.1.0
+biopython==1.83
+langdetect==1.0.9
+rake-nltk==1.0.6
+pydantic==2.6.4
+requests>=2.31.0
+lxml>=4.9.3
+nltk>=3.8.1
+tqdm>=4.66.2
