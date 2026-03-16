@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 from pipeline import process
 from schema import ScrapedDocument
-from storage import save_document, validate_all
+from storage import save_document, validate_all, export_unified_json
 
 # ---------------------------------------------------------------------------
 # Logging setup
@@ -127,6 +127,13 @@ def run():
         print("  🎉  All done! Output stored in scraped_data/")
     else:
         print("  ⚠️   Completed with validation errors. Check scraper.log for details.")
+    print("=" * 60)
+
+    # ---------------------------------------------------------------------------
+    # Unified Export
+    # ---------------------------------------------------------------------------
+    unified = export_unified_json()
+    print(f"\n  📦  Unified JSON → {unified}")
     print("=" * 60 + "\n")
 
     return 0 if all_valid else 1

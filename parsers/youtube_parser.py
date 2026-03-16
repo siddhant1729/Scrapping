@@ -11,7 +11,10 @@ import time
 from typing import Optional
 
 from schema import ScrapedDocument
-from utils import chunk_transcript, detect_language, extract_topic_tags, compute_trust_score
+from utils import chunk_transcript, detect_language, extract_topic_tags
+from scoring.trust_score import TrustScoreEngine
+
+_trust_engine = TrustScoreEngine()
 
 logger = logging.getLogger(__name__)
 
@@ -146,12 +149,14 @@ def parse_youtube(url: str, sleep_sec: float = 2.0) -> ScrapedDocument:
     author = meta.get("channel", "Unknown")
     published_date = meta.get("upload_date", "")
 
-    trust_score = compute_trust_score(
+    trust_score = _trust_engine.compute(
+        source_url=canonical_url,
         source_type="youtube",
         author=author,
         published_date=published_date,
         content_chunks=content_chunks,
         topic_tags=topic_tags,
+        raw_text=full_text,
     )
 
     return ScrapedDocument(

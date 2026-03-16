@@ -94,6 +94,33 @@ Data is automatically partitioned into the `scraped_data/` directory:
 - `scraped_data/blogs.json`
 - `scraped_data/youtube.json`
 - `scraped_data/pubmed.json`
+- `scraped_data/scraped_data.json` ← unified export (all 6 records)
+
+## 🔐 Trust Score Design
+
+Scores are computed by `scoring/trust_score.py` using 5 weighted factors that match the assignment formula:
+
+```
+Trust Score = f(author_credibility, citation_count, domain_authority, recency, medical_disclaimer_presence)
+```
+
+| Factor | Weight | Method |
+|---|---|---|
+| Domain Authority | 0.30 | Tiered whitelist (`scoring/trusted_orgs.json`) |
+| Recency | 0.25 | Exponential decay `e^(-0.3·t)` |
+| Author Credibility | 0.20 | Trusted org lookup + multi-author averaging |
+| Citation Count | 0.15 | Content depth proxy + 50% spam penalty |
+| Medical Safety | 0.10 | Disclaimer keyword detection |
+
+## ⚠️ Limitations
+
+- **Blog paywalls**: Newspaper3k cannot extract content behind paywalls (e.g. WSJ, FT). Readability falls back to minimal text.
+- **YouTube transcripts**: Auto-generated captions may contain errors; some videos have no captions at all — `content_chunks` will be empty for those.
+- **PubMed rate limits**: Without an API key, requests are capped at 3/sec by NCBI. Bulk scraping of many PMIDs will be slow.
+- **Citation count**: A real citation count (e.g. from Semantic Scholar or CrossRef) is not implemented — chunk depth is used as a proxy.
+- **Region detection**: Blog and YouTube `region` is always `null`. Geo-detection would require IP or metadata analysis beyond the current scope.
+- **Language support**: RAKE-NLTK performs poorly on non-English text; the simple frequency fallback is used for those cases.
+- **NumPy/SciPy compatibility**: RAKE-NLTK may crash silently if your environment has a NumPy 2.x/SciPy version conflict — the simple fallback activates automatically.
 
 ---
 

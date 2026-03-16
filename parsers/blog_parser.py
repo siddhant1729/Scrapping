@@ -15,9 +15,13 @@ from typing import Optional
 import requests
 
 from schema import ScrapedDocument
-from utils import chunk_text, detect_language, extract_topic_tags, compute_trust_score, clean_html
+from utils import chunk_text, detect_language, extract_topic_tags, clean_html
+from scoring.trust_score import TrustScoreEngine
 
 logger = logging.getLogger(__name__)
+
+# Singleton engine (loaded once per process)
+_trust_engine = TrustScoreEngine()
 
 # ---------------------------------------------------------------------------
 # User-Agent pool for header rotation
@@ -141,12 +145,14 @@ def parse_blog(url: str, sleep_sec: float = 1.5) -> ScrapedDocument:
     topic_tags = extract_topic_tags(text)
     content_chunks = chunk_text(text)
 
-    trust_score = compute_trust_score(
+    trust_score = _trust_engine.compute(
+        source_url=url,
         source_type="blog",
         author=author,
         published_date=published_date,
         content_chunks=content_chunks,
         topic_tags=topic_tags,
+        raw_text=text,
     )
 
     return ScrapedDocument(
@@ -160,3 +166,4 @@ def parse_blog(url: str, sleep_sec: float = 1.5) -> ScrapedDocument:
         trust_score=trust_score,
         content_chunks=content_chunks,
     )
+

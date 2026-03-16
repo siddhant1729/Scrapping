@@ -12,9 +12,13 @@ from typing import List, Optional
 from xml.etree import ElementTree as ET
 
 from schema import ScrapedDocument
-from utils import chunk_text, detect_language, extract_topic_tags, compute_trust_score
+from utils import chunk_text, detect_language, extract_topic_tags
+from scoring.trust_score import TrustScoreEngine
 
 logger = logging.getLogger(__name__)
+
+_trust_engine = TrustScoreEngine()
+
 
 # NCBI requires a valid email for Entrez access
 ENTREZ_EMAIL = "scraper@example.com"
@@ -156,12 +160,14 @@ def parse_pubmed(pmid: str) -> ScrapedDocument:
     topic_tags = extract_topic_tags(abstract)
     content_chunks = chunk_text(abstract, max_words=200)
 
-    trust_score = compute_trust_score(
+    trust_score = _trust_engine.compute(
+        source_url=canonical_url,
         source_type="pubmed",
         author=author_str,
         published_date=pub_date,
         content_chunks=content_chunks,
         topic_tags=topic_tags,
+        raw_text=abstract,
     )
 
     return ScrapedDocument(

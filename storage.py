@@ -112,3 +112,23 @@ def validate_all() -> bool:
 def get_all_records() -> Dict[str, List[dict]]:
     """Return all records grouped by source type."""
     return {st: _load(st) for st in FILE_MAP}
+
+
+def export_unified_json() -> Path:
+    """
+    Merge all partitioned files into a single scraped_data/scraped_data.json.
+    Returns the path of the unified file.
+    """
+    _ensure_storage()
+    all_records = []
+    for source_type in FILE_MAP:
+        all_records.extend(_load(source_type))
+
+    unified_path = STORAGE_DIR / "scraped_data.json"
+    unified_path.write_text(
+        json.dumps(all_records, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+    logger.info("Unified export → %s  (%d records)", unified_path, len(all_records))
+    return unified_path
+

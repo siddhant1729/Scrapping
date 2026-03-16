@@ -1,0 +1,53 @@
+{
+  "trusted_domains": {
+    "high": [
+      "pubmed.ncbi.nlm.nih.gov",
+      "ncbi.nlm.nih.gov",
+      "nature.com",
+      "science.org",
+      "thelancet.com",
+      "nejm.org",
+      "jamanetwork.com",
+      "bmj.com",
+      "mayoclinic.org",
+      "who.int",
+      "cdc.gov",
+      "nih.gov",
+      "arxiv.org",
+      "bbc.com",
+      "bbc.co.uk",
+      "reuters.com",
+      "apnews.com",
+      "nytimes.com",
+      "theguardian.com",
+      "wsj.com"
+    ],
+    "medium": [
+      "medium.com",
+      "substack.com",
+      "techcrunch.com",
+      "wired.com",
+      "arstechnica.com",
+      "theatlantic.com",
+      "scientificamerican.com",
+      "blog.google",
+      "openai.com",
+      "deepmind.google",
+      "huggingface.co",
+      "towardsdatascience.com"
+    ],
+    "low": []
+  },
+  "trusted_authors": [
+    "google", "openai", "deepmind", "anthropic", "nih", "who", "cdc",
+    "nature", "reuters", "bbc", "associated press", "stanford", "mit",
+    "harvard", "oxford", "cambridge", "nature", "science"
+  ],
+  "trusted_orgs": [
+    "Google", "OpenAI", "DeepMind", "Anthropic", "NIH",
+    "WHO", "CDC", "Nature Publishing Group", "Science AAAS",
+    "BBC News", "Reuters", "Associated Press", "Stanford University",
+    "MIT", "Harvard University", "Oxford University",
+    "Cambridge University", "Mayo Clinic", "Johns Hopkins"
+  ]
+}
