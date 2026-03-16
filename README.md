@@ -175,4 +175,4 @@ MIT — free to use, modify, and distribute.
 
 ---
 
-*Built with ❤️ by **Antigravity** for Siddhant.*
+*Built with ❤️ by Siddhant.*
