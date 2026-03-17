@@ -1,120 +1,61 @@
-# Trust Score System — Mathematical Report
+# Trust Score System — Technical Report
 
-## Section 1: Formula, Factor Weights & Justification
+## Section 1: Scraping Strategy
 
-### 1.1 The Core Equation
+The multi-source scraping engine is designed for high-fidelity extraction from three distinct ecosystems:
 
-The Trust Score (TS) is a **weighted linear combination** of five normalized sub-scores:
-
-$$TS = \sum_{i=1}^{5} (w_i \cdot s_i)$$
-
-Where:
-- $w_i$ = the weight for factor $i$ (all weights sum to **1.0**)
-- $s_i$ = the normalized score for factor $i$, in range $[0, 1]$
-
-### 1.2 Factor Weights Table
-
-| # | Factor | Weight ($w_i$) | Rationale |
-|---|---|---|---|
-| ① | Domain Authority | **0.30** | The publisher is the strongest proxy for credibility |
-| ② | Recency | **0.25** | Stale information in tech/medicine carries real risk |
-| ③ Content Quality | **0.20** | Empty documents are untrustworthy regardless of source |
-| ④ | Author Trust | **0.15** | Named/recognized authors signal accountability |
-| ⑤ | Medical Safety | **0.10** | Disclaimer presence is a regulatory and ethical marker |
-
-### 1.3 Factor Logic & Normalization
-
-#### ① Domain Authority ($s_{domain}$, $w=0.30$)
-A tiered whitelist lookup against `scoring/trusted_orgs.json`:
-
-| Tier | Score | Examples |
-|---|---|---|
-| **PubMed** (always) | 1.0 | pubmed.ncbi.nlm.nih.gov, ncbi.nlm.nih.gov |
-| **High** | 1.0 | nature.com, bbc.com, nih.gov, who.int, reuters.com |
-| **Medium** | 0.5 | medium.com, blog.google, openai.com, huggingface.co |
-| **Unknown** | 0.15 | Any unverified or new domain |
-
-Subdomain traversal is applied: `news.bbc.co.uk` resolves to the `bbc.co.uk` tier.
-
-#### ② Recency ($s_{recency}$, $w=0.25$)
-An **exponential decay function** penalizes older content:
-
-$$s_{recency} = e^{-\lambda \cdot t}$$
-
-Where $t$ = age in years, $\lambda = 0.3$ (decay constant).
-
-| Age | Score |
-|---|---|
-| 0 years (today) | 1.00 |
-| 1 year | 0.74 |
-| 3 years | 0.41 |
-| 5 years | 0.22 |
-| 10 years | 0.05 |
-
-**Missing date** → Stale penalty: $s = 0.4$ (not zero, because absence of date ≠ wrong content).
-
-#### ③ Content Quality ($s_{quality}$, $w=0.20$)
-Based on chunk count (proxy for substantive length):
-
-| Chunks | Base Score |
-|---|---|
-| 0 | 0.10 |
-| 1 | 0.40 |
-| 2 | 0.65 |
-| 3–4 | 0.85 |
-| 5+ | 1.00 |
-
-**SEO Spam Penalty**: If `len(topic_tags) / total_words > 0.03`, the base score is multiplied by **0.5**. This catches keyword-stuffed articles where tags are unnaturally dense.
-
-#### ④ Author Trust ($s_{author}$, $w=0.15$)
-A lookup against the `trusted_authors` and `trusted_orgs` lists in `trusted_orgs.json`:
-
-| Condition | Score |
-|---|---|
-| Matched in trusted_orgs.json | 1.0 |
-| Named (not matched) | 0.7 |
-| Missing on a high-trust domain | 0.65 |
-| Missing on an unknown domain | 0.3 |
-
-The 0.65 "high-domain carry" handles the spec case: *"a Mayo Clinic article with no specific author — the domain score carries the weight."*
-
-#### ⑤ Medical Safety ($s_{medical}$, $w=0.10$)
-Boolean check for 9 disclaimer phrase patterns:
-
-| Source Type | Logic | Score |
-|---|---|---|
-| PubMed | Always safe (peer-reviewed) | 1.0 |
-| Blog / YouTube | Disclaimer phrase found | 1.0 |
-| Blog / YouTube | No disclaimer found | 0.0 |
+- **Blogs (Newspaper3k + Readability)**: We utilize `newspaper3k` for its specialized ability to identify and extract the "clean" body text of articles while discarding headers, footers, and advertisements. A fallback to `readability-lxml` ensures that even non-standard blogs are processed with high accuracy.
+- **YouTube (yt-dlp + youtube-transcript-api)**: To capture the depth of video content, we extract both high-level metadata (via `yt-dlp`) and the full text transcript. This allows the trust engine to evaluate the actual verbal content of the video rather than just the title/description.
+- **PubMed (Biopython Entrez)**: We use the official NCBI Entrez API to fetch structured XML. This provides scientific-grade accuracy for authors, journal identifiers, and publication dates, forming the "gold standard" for our trust evaluation.
 
 ---
 
-## Section 2: Edge Cases & "Friday Evening Slowness" Analysis
+## Section 2: Topic Tagging Method
 
-### 2.1 Missing Metadata Handling
+Automatic topic generation is performed via a hybrid NLP approach in `utils.py`:
 
-| Missing Field | Strategy | Justification |
+1. **RAKE-NLTK (Primary)**: We use the Rapid Automatic Keyword Extraction (RAKE) algorithm to identify candidate phrases based on the co-occurrence of words. This identifies technical terms (e.g., "Machine Learning") rather than just single words.
+2. **Frequency Fallback**: To ensure resilience (especially during NumPy/SciPy version conflicts), we implement a fallback frequency analyzer. This ensures that the scraper remains functional even in restricted environments.
+3. **Filtering**: All tags are cross-referenced against a list of common stop-words and normalized to ensure the output is clean and relevant for the `topic_tags` JSON field.
+
+---
+
+## Section 3: Trust Score Algorithm
+
+### 3.1 The Core Formula
+
+The Trust Score (TS) is a **weighted linear combination of five normalized factors**, ensuring a transparent and objective credibility rating in the range $[0.0, 1.0]$:
+
+$$TS = \sum (w_i \cdot s_i)$$
+
+| Factor | Weight ($w_i$) | Rationale |
 |---|---|---|
-| No `published_date` | Recency score = **0.4** | Neutral-stale penalty; not 0 because absence ≠ false content |
-| No `author` | Author score = **0.3** or **0.65** | Domain carries weight when publisher is known |
-| Empty `content_chunks` | Quality score = **0.10** | Non-zero minimum — the URL itself is still a signal |
-| Keyword Stuffing | Quality score × **0.5** | Tag ratio guard at `tags/words > 0.03` |
+| Domain Authority | **0.30** | Publisher reputation is the strongest proxy for reliability. |
+| Recency | **0.25** | Information decay is critical, especially in tech/medicine. |
+| Author Credibility | **0.20** | Named, verified responsibility for content. |
+| Citation Count | **0.15** | Depth of content and structural substantive signals. |
+| Medical Safety | **0.10** | Presence of disclaimers for ethical/regulatory safety. |
 
-### 2.2 "Friday Evening Slowness" — Bottleneck Analysis
+### 3.2 Factor Definitions & Normalization
 
-This scenario describes high-latency conditions where:
-1. **NCBI's Entrez API** slows down under load (evenings, weekends)
-2. **YouTube's transcript server** rate-limits aggressive scrapers
-3. **News sites** (BBC, Nature) detect bot traffic and slow responses
+- **Domain Authority**: Tiered lookup (High=1.0, Med=0.5, Low=0.15). PubMed is hard-coded as 1.0.
+- **Recency**: Calculated using exponential decay $e^{-0.3 \cdot t}$ where $t$ is age in years.
+- **Author Credibility**: Verified against `trusted_orgs.json`. Supports **multi-author averaging** where individual scores are calculated and the mean is returned.
+- **Citation Count**: Since no live citation database is integrated, we use a structural proxy (chunk depth). A keyword-stuffing penalty (50% reduction) is applied if the tag-to-word ratio exceeds 0.03.
+- **Medical Safety**: A boolean keyword scan for phrases like "Not medical advice". PubMed is automatically granted 1.0 due to its peer-reviewed nature.
 
-**Root Cause**: All 6 sources are scraped **sequentially** in the current implementation. A single slow source blocks the entire pipeline.
+---
 
-**Mitigation Strategies Implemented:**
-| Bottleneck | Mitigation |
-|---|---|
-| PubMed/NCBI rate limit | `REQUEST_INTERVAL = 0.4s` between requests; supports API key for 10 req/s |
-| YouTube transcript | 2-second `sleep_sec` delay; v1.0+ instance API used to avoid deprecated endpoints |
-| Blog anti-bot walls | User-Agent rotation from a pool of 5 real browser fingerprints |
-| Full pipeline slowness | Error isolation — one failure doesn't block others; `tqdm` shows live progress |
+## Section 4: Edge Cases & Abuse Prevention
 
-**Future Optimization**: Rewrite the main loop using `asyncio` + `aiohttp` for parallel async scraping, reducing wall-clock time from ~36 seconds to ~8 seconds.
+### 4.1 Edge Case Handling
+- **Missing Date**: Assigned a neutral-stale score of **0.4** to prevent unknown dates from appearing "fresh". 
+- **Missing Author**: Scored at **0.3** (penalty) UNLESS on a high-trust domain (e.g., Mayo Clinic), in which case the domain carries the weight (**0.65**).
+- **Multiple Authors**: The engine identifies individual authors and applies the **averaging logic** required by the specification.
+- **Missing Transcript**: Gracefully handles YouTube videos with no captions; `content_chunks` returns empty but metadata extraction continues.
+
+### 4.2 Abuse Prevention
+- **Fake Author Guard**: Cross-references every author string against a known organization whitelist.
+- **SEO Spam Guard**: Detects "keyword stuffing" by analyzing tag density; penalized by 50% on the citation factor.
+- **Outdated Content Guard**: Exponential decay ensures that even from a high-trust source, 10-year-old content cannot achieve a high score.
+- **Medical Misinformation**: Penalizes blogs/videos that offer health advice without a standard medical disclaimer.
