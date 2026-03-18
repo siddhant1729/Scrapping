@@ -13,7 +13,8 @@ ENV/
 *.log
 
 # Project specific
-scraped_data/
+*.json
+!scraped_data/scraped_data.json
 
 # IDE settings
 .vscode/

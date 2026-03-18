@@ -23,7 +23,7 @@ def process(
     **kwargs,
 ) -> ScrapedDocument:
     """
-    Route a URL or identifier to the appropriate parser.
+    Route a URL or identifier to the appropriate scraper.
 
     Parameters
     ----------
@@ -34,8 +34,7 @@ def process(
     source_type : str
         One of "blog", "youtube", "pubmed".
     **kwargs :
-        Additional keyword arguments forwarded to the parser
-        (e.g. sleep_sec for rate limiting).
+        Additional keyword arguments forwarded to the scraper.
 
     Returns
     -------
@@ -45,15 +44,15 @@ def process(
     logger.info("Pipeline → source_type=%s  target=%s", source_type, url_or_id)
 
     if source_type == "blog":
-        from parsers.blog_parser import parse_blog
+        from scraper.blog_scraper import parse_blog
         return parse_blog(url_or_id, **kwargs)
 
     elif source_type == "youtube":
-        from parsers.youtube_parser import parse_youtube
+        from scraper.youtube_scraper import parse_youtube
         return parse_youtube(url_or_id, **kwargs)
 
     elif source_type == "pubmed":
-        from parsers.pubmed_parser import parse_pubmed
+        from scraper.pubmed_scraper import parse_pubmed
         return parse_pubmed(url_or_id, **kwargs)
 
     else:

@@ -16,7 +16,7 @@ Factors and weights (must sum = 1.0):
     ② Recency              w=0.25
     ③ Author Credibility   w=0.20
     ④ Citation Count       w=0.15  (proxy: content depth + spam guard)
-    ⑤ Medical Safety       w=0.10
+    ⑤ Medical Disclaimer Presence  w=0.10
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ WEIGHTS = {
     "recency":           0.25,
     "author_credibility": 0.20,
     "citation_count":    0.15,
-    "medical_safety":    0.10,
+    "medical_disclaimer_presence": 0.10,
 }
 
 # Recency decay constant (λ). At λ=0.3:
@@ -114,7 +114,7 @@ class TrustScoreEngine:
             "recency":            self._score_recency(published_date),
             "author_credibility": self._score_author(author, source_url),
             "citation_count":     self._score_citation_proxy(content_chunks, topic_tags, source_type),
-            "medical_safety":     self._score_medical_safety(source_type, raw_text),
+            "medical_disclaimer_presence": self._score_medical_disclaimer(source_type, raw_text)
         }
 
         ts = sum(WEIGHTS[k] * s[k] for k in WEIGHTS)
@@ -122,9 +122,9 @@ class TrustScoreEngine:
 
         logger.debug(
             "TrustScore for %s | domain=%.2f recency=%.2f author=%.2f "
-            "citation=%.2f medical=%.2f → TS=%.4f",
+            "citation=%.2f medical_disclaimer=%.2f → TS=%.4f",
             source_url, s["domain_authority"], s["recency"],
-            s["author_credibility"], s["citation_count"], s["medical_safety"], result,
+            s["author_credibility"], s["citation_count"], s["medical_disclaimer_presence"], result,
         )
         return result
 
@@ -263,10 +263,10 @@ class TrustScoreEngine:
         return round(base, 4)
 
     # ------------------------------------------------------------------
-    # Factor ⑤: Medical Safety  (w=0.10)
+    # Factor ⑤: Medical Disclaimer Presence  (w=0.10)
     # ------------------------------------------------------------------
 
-    def _score_medical_safety(self, source_type: str, raw_text: str) -> float:
+    def _score_medical_disclaimer(self, source_type: str, raw_text: str) -> float:
         """
         Boolean check for disclaimer phrases.
         PubMed: always 1.0 (peer-reviewed = inherently safe).

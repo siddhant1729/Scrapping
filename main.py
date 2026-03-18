@@ -41,13 +41,13 @@ SOURCES: List[Tuple[str, str, str]] = [
     # --- Blogs (3) ---
     (
         "blog",
-        "https://www.bbc.com/news/articles/cv2g4peljngo",
-        "BBC News Article",
+        "https://openai.com/index/openai-o1-preview-now-available-in-chatgpt-plus-and-team/",
+        "OpenAI Blog: O1 Model Announcement",
     ),
     (
         "blog",
-        "https://www.nature.com/articles/d41586-025-00449-2",
-        "Nature News Article",
+        "https://news.mit.edu/2024/mit-researchers-develop-new-way-measure-uncertainty-ai-1219",
+        "MIT News: AI Uncertainty Measurement",
     ),
     (
         "blog",
@@ -68,8 +68,8 @@ SOURCES: List[Tuple[str, str, str]] = [
     # --- PubMed (1) ---
     (
         "pubmed",
-        "39848003",
-        "PubMed PMID 39848003",
+        "39776398",
+        "PubMed PMID 39776398",
     ),
 ]
 

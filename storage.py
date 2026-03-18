@@ -116,19 +116,27 @@ def get_all_records() -> Dict[str, List[dict]]:
 
 def export_unified_json() -> Path:
     """
-    Merge all partitioned files into a single scraped_data/scraped_data.json.
-    Returns the path of the unified file.
+    Merge all partitioned files into a single scraped_data/scraped_data.json
+    AND output/scraped_data.json (assignment-required location).
+    Returns the path of the primary unified file.
     """
     _ensure_storage()
     all_records = []
     for source_type in FILE_MAP:
         all_records.extend(_load(source_type))
 
+    payload = json.dumps(all_records, ensure_ascii=False, indent=2)
+
+    # Primary: scraped_data/scraped_data.json
     unified_path = STORAGE_DIR / "scraped_data.json"
-    unified_path.write_text(
-        json.dumps(all_records, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
-    logger.info("Unified export → %s  (%d records)", unified_path, len(all_records))
+    unified_path.write_text(payload, encoding="utf-8")
+
+    # Secondary: output/scraped_data.json (assignment structure)
+    output_dir = Path(__file__).parent / "output"
+    output_dir.mkdir(exist_ok=True)
+    (output_dir / "scraped_data.json").write_text(payload, encoding="utf-8")
+
+    logger.info("Unified export → %s + output/scraped_data.json  (%d records)",
+                unified_path, len(all_records))
     return unified_path
 

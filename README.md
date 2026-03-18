@@ -45,22 +45,23 @@ The Scraper Engine is a resilient, multi-ecosystem data pipeline with specialise
 ```
 main.py  (Entry Point)
     └── pipeline.py  (Dispatcher)
-            ├── parsers/blog_parser.py
-            ├── parsers/youtube_parser.py
-            └── parsers/pubmed_parser.py
+            ├── scraper/blog_scraper.py
+            ├── scraper/youtube_scraper.py
+            └── scraper/pubmed_scraper.py
                         │
                         ▼
-                    utils.py  (Common Tools)
-                    ├── Language Detection
-                    ├── Topic Tagging
-                    ├── Text Chunking
-                    └── Trust Scoring
+                    utils/  (Common Logic)
+                    ├── tagging.py
+                    ├── chunking.py
+                    └── helpers.py
                         │
                         ▼
-                    schema.py  (Pydantic Models)
+                    scoring/  (Trust Engine)
+                    ├── trust_score.py
+                    └── trusted_orgs.json
                         │
                         ▼
-                    storage.py  (JSON Output)
+                    schema.py + storage.py
 ```
 
 ---
