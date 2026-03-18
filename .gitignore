@@ -12,9 +12,14 @@ ENV/
 # Logging
 *.log
 
-# Project specific
-*.json
+# Project specific: Ignore intermediate JSON but keep the unified output
+scraped_data/
 !scraped_data/scraped_data.json
+!output/scraped_data.json
+
+# Diagnostic & Test Scripts
+debug_*.py
+test_*.py
 
 # IDE settings
 .vscode/
@@ -24,10 +29,17 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Jupyter Notebook
+# Notebooks & Research
 .ipynb_checkpoints/
-
 Learning.md
 learning.ipynb
-#pdf
-*.pdf
+PROJECT_EXPLAINER.md
+
+# Keep the final report PDF (if generated)
+!Report.pdf
+!TRUST_SCORE_REPORT.md
+ debug_scraping.py
+ cleanup_repo.py
+
+ *.pdf
+ misc/
