@@ -70,7 +70,7 @@ main.py  (Entry Point)
 
 **1. Navigate to the project directory**
 ```cmd
-cd "C:\Users\shaur\OneDrive\Desktop\Scrapper"
+cd Scrapping
 ```
 
 **2. Install dependencies**
